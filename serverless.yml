@@ -1,0 +1,355 @@
+service: ga-web-english-project
+
+plugins:
+  - serverless-offline
+  - serverless-domain-manager
+
+custom:
+  allowedHeaders:
+    - x-user
+    - Accept
+    - Content-Type
+    - Content-Length
+    - Authorization
+  customDomain:
+    domainName: api.localvoice.pl
+    basePath: 'v1'
+    stage: ${self:provider.stage}
+    certificateName: localvoice.pl
+    createRoute53Record: true
+# USERS: ${file(./variables.json):USERS}
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: eu-central-1
+  stage: prod
+  memorySize: 128
+  timeout: 5
+  endpointType: regional
+  environment:
+    NODE_ENV: ${file(./variables.json):NODE_ENV}
+    LESSONS_TABLE: ${file(./variables.json):LESSONS_TABLE}
+    USERS_TABLE: ${file(./variables.json):USERS_TABLE}
+    SYNONYMS_TABLE: ${file(./variables.json):SYNONYMS_TABLE}
+    DIALOGFLOW_PROJECT_ID: ${file(./variables.json):DIALOGFLOW_PROJECT_ID}
+    WORDS_TABLE: ${file(./variables.json):WORDS_TABLE}
+    LESSONS_FOR_TESTING: ${file(./variables.json):LESSONS_FOR_TESTING}
+    CHALLENGE_DB: ${file(./variables.json):CHALLENGE_DB}
+    INIT_VERSION: 0
+    SECRET_KEY: ${file(./variables.json):SECRET_KEY}
+
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:Scan
+      Resource:
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.LESSONS_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.LESSONS_TABLE}/*/*"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.LESSONS_FOR_TESTING}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.SYNONYMS_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.WORDS_TABLE}"
+
+
+
+functions:
+  test-lesson:
+    handler: api/post-test-lesson.handler
+    description: POST /test
+    events:
+      - http:
+          path: test
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
+  get-words:
+    handler: api/get-words.handler
+    description: GET /words
+    events:
+      - http:
+          path: words
+          method: get
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+  save-synonyms:
+    handler: api/post-synonyms.handler
+    description: POST /synonyms
+    events:
+      - http:
+          path: synonyms
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+  create-entities:
+    handler: api/post-create-entities.handler
+    description: POST /entities
+    events:
+      - http:
+          path: entities
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+  get-lesson-for-teachers:
+    handler: api/post-lesson.handler
+    description: POST /lesson
+    events:
+      - http:
+          path: lesson
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+  get-lessons-for-teachers:
+    handler: api/get-lessons.handler
+    description: GET /lessons/{name}
+    events:
+      - http:
+          path: lessons/{name}
+          method: get
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                #set($inputRoot = $input.path('$'))
+                {
+                "tester": "$input.params('name')"
+                }
+  save-lesson-for-teachers:
+    handler: api/post-save-lesson.handler
+    description: POST /save
+    events:
+      - http:
+          path: save
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
+  update-image-versioning:
+    handler: api/post-image-versioning.handler
+    description: POST /image
+    events:
+      - http:
+          path: image
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
+  get-image-versioning:
+    handler: api/get-image-versioning.handler
+    description: GET /image
+    events:
+      - http:
+          path: image
+          method: get
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
+  registration-for-testers:
+    handler: api/post-registration.handler
+    description: POST /registration
+    events:
+      - http:
+          path: registration
+          method: post
+          authorizer:
+            name: authorization-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
+          integration: lambda
+          cors: true
+          request:
+            template:
+              application/json: >
+  authorization-lambda:
+    handler: api/auth.handler
+    integration: lambda
+
+
+# resources:
+#   Resources:
+#     GatewayResponseDefault4XX:
+#       Type: 'AWS::ApiGateway::GatewayResponse'
+#       Properties:
+#         ResponseParameters:
+#           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+#           gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+#         ResponseType: DEFAULT_4XX
+#         RestApiId:
+#           Ref: 'ApiGatewayRestApi'
+#     LessonsTable:
+#       Type: AWS::DynamoDB::Table
+#       DeletionPolicy: Retain
+#       Properties:
+#         TableName: ${self:provider.environment.LESSONS_TABLE}
+#         AttributeDefinitions:
+#           - AttributeName: category
+#             AttributeType: S
+#           - AttributeName: name
+#             AttributeType: S
+#           - AttributeName: tester
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: category
+#             KeyType: HASH
+#           - AttributeName: name
+#             KeyType: RANGE
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
+#         GlobalSecondaryIndexes:
+#           - IndexName: tester-index
+#             KeySchema:
+#               - AttributeName: tester
+#                 KeyType: HASH
+#             Projection:
+#               ProjectionType: ALL
+#             ProvisionedThroughput:
+#               ReadCapacityUnits: 1
+#               WriteCapacityUnits: 1
+#     WordTable:
+#       Type: AWS::DynamoDB::Table
+#       DeletionPolicy: Retain
+#       Properties:
+#         TableName: ${self:provider.environment.WORDS_TABLE}
+#         AttributeDefinitions:
+#           - AttributeName: word
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: word
+#             KeyType: HASH
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
+#     RegistrationTable:
+#       Type: AWS::DynamoDB::Table
+#       DeletionPolicy: Retain
+#       Properties:
+#         TableName: ${self:provider.environment.USERS_TABLE}
+#         AttributeDefinitions:
+#           - AttributeName: email
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: email
+#             KeyType: HASH
+#         BillingMode: PAY_PER_REQUEST
