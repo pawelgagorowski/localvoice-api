@@ -1,0 +1,112 @@
+{
+  "responseId": "efc9ed7b-6451-44b3-a4fc-6b4b206a1acc-d794dba9",
+  "queryResult": {
+    "queryText": "GOOGLE_ASSISTANT_WELCOME",
+    "action": "input.welcome",
+    "parameters": {},
+    "allRequiredParamsPresent": true,
+    "fulfillmentText": "Hi! How are you doing?",
+    "fulfillmentMessages": [
+      {
+        "text": {
+          "text": [
+            "Hi! How are you doing?"
+          ]
+        }
+      }
+    ],
+    "outputContexts": [
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/actions_capability_audio_output"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/actions_capability_screen_output"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/actions_capability_account_linking"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/actions_capability_media_response_audio"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/google_assistant_input_type_voice"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/google_assistant_welcome"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz/contexts/__system_counters__",
+        "parameters": {
+          "no-input": 0,
+          "no-match": 0
+        }
+      }
+    ],
+    "intent": {
+      "name": "projects/reading-action-ftptcy/agent/intents/b801517a-3e3d-4ded-b2d2-910527f036ed",
+      "displayName": "Default Welcome Intent"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "en"
+  },
+  "originalDetectIntentRequest": {
+    "source": "google",
+    "version": "2",
+    "payload": {
+      "user": {
+        "locale": "en-US",
+        "lastSeen": "2020-08-20T10:34:11Z",
+        "userVerificationStatus": "VERIFIED"
+      },
+      "conversation": {
+        "conversationId": "ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz",
+        "type": "NEW"
+      },
+      "inputs": [
+        {
+          "intent": "actions.intent.MAIN",
+          "rawInputs": [
+            {
+              "inputType": "VOICE",
+              "query": "Talk to reading my text"
+            }
+          ]
+        }
+      ],
+      "surface": {
+        "capabilities": [
+          {
+            "name": "actions.capability.AUDIO_OUTPUT"
+          },
+          {
+            "name": "actions.capability.SCREEN_OUTPUT"
+          },
+          {
+            "name": "actions.capability.ACCOUNT_LINKING"
+          },
+          {
+            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+          }
+        ]
+      },
+      "isInSandbox": true,
+      "availableSurfaces": [
+        {
+          "capabilities": [
+            {
+              "name": "actions.capability.AUDIO_OUTPUT"
+            },
+            {
+              "name": "actions.capability.SCREEN_OUTPUT"
+            },
+            {
+              "name": "actions.capability.WEB_BROWSER"
+            }
+          ]
+        }
+      ],
+      "requestType": "SIMULATOR"
+    }
+  },
+  "session": "projects/reading-action-ftptcy/agent/sessions/ABwppHEh8z_wxD3gpATGL4KqxrnLPL1cQCGQxDR5KASWIRZrceSv3a-rmyix7bI9poYbP6jF2c57En-VLJVNp8GoSLJz"
+}

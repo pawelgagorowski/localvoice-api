@@ -1,0 +1,115 @@
+{
+  "responseId": "bfd59862-0ee4-44a0-8721-f1d6040e8ba5-d794dba9",
+  "queryResult": {
+    "queryText": "Read the lesson",
+    "parameters": {},
+    "allRequiredParamsPresent": true,
+    "fulfillmentMessages": [
+      {
+        "text": {
+          "text": [
+            ""
+          ]
+        }
+      }
+    ],
+    "outputContexts": [
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk/contexts/actions_capability_account_linking"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk/contexts/actions_capability_media_response_audio"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk/contexts/actions_capability_audio_output"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk/contexts/actions_capability_screen_output"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk/contexts/google_assistant_input_type_voice"
+      },
+      {
+        "name": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk/contexts/__system_counters__",
+        "parameters": {
+          "no-input": 0,
+          "no-match": 0
+        }
+      }
+    ],
+    "intent": {
+      "name": "projects/reading-action-ftptcy/agent/intents/6ef74d1a-f2ba-4c83-b083-61bcab1969f0",
+      "displayName": "Reading intent"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "en"
+  },
+  "originalDetectIntentRequest": {
+    "source": "google",
+    "version": "2",
+    "payload": {
+      "user": {
+        "locale": "en-US",
+        "lastSeen": "2020-08-20T16:39:46Z",
+        "userVerificationStatus": "VERIFIED"
+      },
+      "conversation": {
+        "conversationId": "ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk",
+        "type": "ACTIVE",
+        "conversationToken": "[]"
+      },
+      "inputs": [
+        {
+          "intent": "actions.intent.TEXT",
+          "rawInputs": [
+            {
+              "inputType": "VOICE",
+              "query": "Read the lesson"
+            }
+          ],
+          "arguments": [
+            {
+              "name": "text",
+              "rawText": "Read the lesson",
+              "textValue": "Read the lesson"
+            }
+          ]
+        }
+      ],
+      "surface": {
+        "capabilities": [
+          {
+            "name": "actions.capability.ACCOUNT_LINKING"
+          },
+          {
+            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+          },
+          {
+            "name": "actions.capability.AUDIO_OUTPUT"
+          },
+          {
+            "name": "actions.capability.SCREEN_OUTPUT"
+          }
+        ]
+      },
+      "isInSandbox": true,
+      "availableSurfaces": [
+        {
+          "capabilities": [
+            {
+              "name": "actions.capability.AUDIO_OUTPUT"
+            },
+            {
+              "name": "actions.capability.SCREEN_OUTPUT"
+            },
+            {
+              "name": "actions.capability.WEB_BROWSER"
+            }
+          ]
+        }
+      ],
+      "requestType": "SIMULATOR"
+    }
+  },
+  "session": "projects/reading-action-ftptcy/agent/sessions/ABwppHGjdINR4TvBwBfTALhhE55gtTnFGCXVxePXs7Jufk4-i-BCDDng8fFUcynCwYMxJJ7Yvn_ORd8BTSD8IaVnHVRk"
+}

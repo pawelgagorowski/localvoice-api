@@ -12,19 +12,6 @@ exports.handler = async (event) => {
   console.log(event)
   try {
       const category = event.body.category;
-      // const params = {
-      //   TableName: tableName,
-      //   Item: {
-      //     course: event.body.course,
-      //     category: event.body.category,
-      //     tester: event.headers["x-user"],
-      //     name: event.body.name,
-      //     translatedCategory: event.body.translatedCategory,
-      //     translatedName: event.body.translatedName,
-      //     todaysLesson: event.body.todaysLesson
-      //     }
-      //   }
-
       const params = {
         TableName: tableName,
         ReturnValues:"UPDATED_NEW",

@@ -1,0 +1,1 @@
+lambda-local -l api/action-to-readFunction.js --timeout 20 -e event.json
