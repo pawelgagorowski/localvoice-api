@@ -8,10 +8,13 @@
 const AWS = require('aws-sdk');
 AWS.config.update({ region: 'eu-central-1' });
 const docClient = new AWS.DynamoDB.DocumentClient();
-const versioningTable = process.env.LESSONS_FOR_TESTING
+const versioningTable = process.env.LIST_OF_ALL_LESSONS_TABLE
 
 exports.handler = async (event) => {
+  console.log("jesteśmy w post-image-versining!!")
   console.log(event)
+  console.log("event.body.business", event.body.business);
+  console.log("event.body.name", event.body.key);
     const version = 'versionOfTest';
     console.log(versioningTable)
     const params = {
@@ -26,8 +29,8 @@ exports.handler = async (event) => {
       },
       UpdateExpression: "set #c = if_not_exists(#c, :init) + :inc",
       Key: {
-        "category": event.body.category,
-        "name": event.body.name
+        business: event.body.business,
+        key: event.body.key
       }
     }
 

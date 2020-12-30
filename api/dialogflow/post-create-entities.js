@@ -336,7 +336,7 @@ class EntityNotFoundError extends Error {};
 function getLesson(name, lambdaCallback) {
 
   const params = {
-      TableName: `${process.env.LESSONS_TABLE}`,
+      TableName: `${process.env.LIST_OF_ALL_LESSONS_TABLE}`,
       Key:{
           "name": name
       }
