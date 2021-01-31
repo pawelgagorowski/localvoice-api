@@ -24,6 +24,7 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         const missingBusinessHeaderErrorMessasge = "there is no business coresponding with the user while getting name of business";
         const noUserInHeaderErrorMessage = "there is no user in header while getting name of business";
         const successResponseMessage = "business name was successfully retrieved";
+        const noBusinessFound = "there was no business coresponding with the user. Contact to admin";
         const { ['X-user']: user } = helperFunctions_1.getHeaders(event.headers, noUserInHeaderErrorMessage, "X-user");
         const params = {
             TableName: process.env.BUSINESS_TABLE,
@@ -33,7 +34,11 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         };
         const business = yield dynamoDB_1.default.getItem(params, missingBusinessHeaderErrorMessasge);
         logger_1.default("info", business, "name of business");
-        const response = response_1.default.createResponseMessage(successResponseMessage, business);
+        let response = {};
+        if (!business)
+            response = response_1.default.createResponseMessage(noBusinessFound, {});
+        else
+            response = response_1.default.createResponseMessage(successResponseMessage, { business: business });
         return response;
     }
     catch (error) {

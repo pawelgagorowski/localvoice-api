@@ -40,7 +40,7 @@ class DynamoDB {
             if (helperFunctions_1.isAWSErrorMessage(data))
                 throw errorResponse_1.default.createCustomErrorMessage(noItemErrorMessage);
             if (!data.Item) {
-                return data;
+                return "";
             }
             return data.Item;
         });

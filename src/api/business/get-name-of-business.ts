@@ -1,7 +1,7 @@
 'use strict';
 
 import AWS                                       from "aws-sdk";
-import { UserHeaderType }                        from "../../models/types";
+import { UserHeaderType, ResponseType }          from "../../models/types";
 import { HeaderRequestInterface }                from "../../models/interfaces";
 import { getHeaders }                            from "../../utils/helperFunctions";
 import CustomError                               from "../../classes/errorResponse";
@@ -16,6 +16,7 @@ const handler = async (event: HeaderRequestInterface<UserHeaderType>) => {
     const missingBusinessHeaderErrorMessasge = "there is no business coresponding with the user while getting name of business";
     const noUserInHeaderErrorMessage = "there is no user in header while getting name of business";
     const successResponseMessage = "business name was successfully retrieved";
+    const noBusinessFound = "there was no business coresponding with the user. Contact to admin";
     const { ['X-user']: user } = getHeaders<UserHeaderType>(event.headers, noUserInHeaderErrorMessage, "X-user");
 
     const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
@@ -26,7 +27,9 @@ const handler = async (event: HeaderRequestInterface<UserHeaderType>) => {
     }
     const business = await DynamoDB.getItem<string>(params, missingBusinessHeaderErrorMessasge);
     logger("info", business, "name of business");
-    const response = Response.createResponseMessage<string>(successResponseMessage, business);
+    let response = {} as ResponseType;
+    if(!business) response = Response.createResponseMessage(noBusinessFound, {});
+    else response = Response.createResponseMessage(successResponseMessage, { business: business});
     return response;
 
   } catch(error) {
