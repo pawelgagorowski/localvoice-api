@@ -7,15 +7,15 @@ plugins:
 
 custom:
   allowedHeaders:
-    - X-Business
-    - X-User
+    - X-business
+    - X-user
     - Accept
     - Content-Type
     - Content-Length
     - Authorization
   customDomain:
     domainName: api.localvoice.pl
-    basePath: 'v1'
+    basePath: 'v2'
     stage: ${opt:stage, self:provider.stage}
     certificateName: localvoice.pl
     createRoute53Record: true
@@ -33,12 +33,11 @@ provider:
     LIST_OF_ALL_LESSONS_TABLE: !ImportValue LessonsToLearnTable-${opt:stage, self:provider.stage}
     USERS_TABLE: !ImportValue UsersTable-${opt:stage, self:provider.stage}
     WORDS_TABLE: !ImportValue WordsTable-${opt:stage, self:provider.stage}
-    # CHALLENGE_DB: ${file(./variables.json):CHALLENGE_DB}
+    COURSES_IN_BUSINESS_TABLE: !ImportValue CoursesInBusinessTable-${opt:stage, self:provider.stage}
     BUSINESS_TABLE: !ImportValue BusinessTable-${opt:stage, self:provider.stage}
     LESSONS_TABLE: ga-web-english-project--lessons_for_testing-prod
-
+    MONTHLY_CHALLENGE_TABLE: !ImportValue MonthlyChallengeTable-${opt:stage, self:provider.stage}
     INIT_VERSION: 0
-    # SECRET_KEY: ${file(./variables.json):SECRET_KEY}
     COURSES_TABLE: !ImportValue CoursesTable-${opt:stage, self:provider.stage}
     CATEGORIES_TABLE: !ImportValue ListOfCategoriesTable-${opt:stage, self:provider.stage}
     LIST_OF_LESSONS_FOR_SPECIFIC_CATEGORY_TABLE: !ImportValue ListOfLessonsTable-${opt:stage, self:provider.stage}
@@ -46,7 +45,11 @@ provider:
     LESSONS_FOR_TESTING: ${file(./variables.json):LESSONS_FOR_TESTING}
     DIALOGFLOW_PROJECT_ID: ${file(./variables.json):DIALOGFLOW_PROJECT_ID}
     AWS_S3_BUCKET_PICTURES: ${file(./variables.json):AWS_S3_BUCKET_PICTURES}
-    # SYNONYMS_TABLE: !ImportValue UsersTable-${opt:stage, self:provider.stage}
+    ECS_CLUSTER_NAME: ${file(./variables.json):ECS_CLUSTER_NAME}
+    ECS_TASK_DEFINITION: ${file(./variables.json):ECS_TASK_DEFINITION}
+    ECS_TASK_VPC_SUBNET_1: ${file(./variables.json):ECS_TASK_VPC_SUBNET_1}
+    ECS_TASK_VPC_SUBNET_2: ${file(./variables.json):ECS_TASK_VPC_SUBNET_2}
+    CONTAINER_NAME: ${file(./variables.json):CONTAINER_NAME}
 
 
   iamRoleStatements:
@@ -70,9 +73,11 @@ provider:
         - !ImportValue StructureTableArn-${opt:stage, self:provider.stage}
         - !ImportValue CoursesTableArn-${opt:stage, self:provider.stage}
         - !ImportValue ListOfCategoriesTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue CoursesInBusinessTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue MonthlyChallengeTableArn-${opt:stage, self:provider.stage}
 functions:
   test-lesson:
-    handler: api/lesson/post-test-lesson.handler
+    handler: dist/api/lesson/post-test-lesson.handler
     description: POST /test
     events:
       - http:
@@ -104,8 +109,41 @@ functions:
                   #end
                 }
                 }
+  generate-pictures:
+    handler: src/api/pictures/generate-pictures.handler
+    description: POST /generatePictures
+    events:
+      - http:
+          path: generatePictures
+          method: post
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
   image-credentials:
-    handler: api/images/get-image-credentials.handler
+    handler: dist/api/little-images/get-image-credentials.handler
     description: GET /imageCredentials
     events:
       - http:
@@ -138,7 +176,7 @@ functions:
                 }
                 }
   delete-image:
-    handler: api/images/delete-image.handler
+    handler: dist/api/little-images/delete-image.handler
     description: DELETE /image
     events:
       - http:
@@ -171,7 +209,7 @@ functions:
                 }
                 }
   get-words:
-    handler: api/words/get-words.handler
+    handler: src/api/words/get-words.handler
     description: GET /words
     events:
       - http:
@@ -184,8 +222,9 @@ functions:
           request:
             template:
               application/json: >
+
   save-synonyms:
-    handler: api/dialogflow/post-synonyms.handler
+    handler: src/api/dialogflow/post-synonyms.handler
     description: POST /synonyms
     events:
       - http:
@@ -198,23 +237,9 @@ functions:
           request:
             template:
               application/json: >
-  create-entities:
-    handler: api/dialogflow/post-create-entities.handler
-    description: POST /entities
-    events:
-      - http:
-          path: entities
-          method: post
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
+
   get-saved-lesson:
-    # in use
-    handler: api/lesson/get-saved-lesson.handler
+    handler: dist/api/lesson/get-saved-lesson.handler
     description: GET /lesson
     events:
       - http:
@@ -248,7 +273,7 @@ functions:
                 }
   delete-saved-lesson:
     # in use
-    handler: api/lesson/delete-lesson.handler
+    handler: src/api/lesson/delete-lesson.handler
     description: DELETE /lesson
     events:
       - http:
@@ -282,7 +307,7 @@ functions:
                 }
   get-saved-lessons:
     # in use
-    handler: api/lessons/get-lessons.handler
+    handler: dist/api/lessons/get-lessons.handler
     description: GET /lessons/{name}
     events:
       - http:
@@ -301,7 +326,7 @@ functions:
                 }
   save-lesson-for-further-processing:
     # in use
-    handler: api/lesson/post-save-lesson.handler
+    handler: dist/api/lesson/post-saved-lesson.handler
     description: POST /save
     events:
       - http:
@@ -334,7 +359,7 @@ functions:
                 }
                 }
   update-image-versioning:
-    handler: api/images/post-image-versioning.handler
+    handler: dist/api/little-images/post-image-versioning.handler
     description: POST /image
     events:
       - http:
@@ -367,7 +392,7 @@ functions:
                 }
                 }
   get-image-versioning:
-    handler: api/images/get-image-versioning.handler
+    handler: dist/api/little-images/get-image-versioning.handler
     description: GET /image
     events:
       - http:
@@ -577,7 +602,7 @@ functions:
   #               }
   #               }
   get-structure:
-    handler: api/structure/get-structure.handler
+    handler: dist/api/structure/get-structure.handler
     description: GET /structure
     events:
       - http:
@@ -610,7 +635,7 @@ functions:
                 }
                 }
   save-structure:
-    handler: api/structure/post-save-structure.handler
+    handler: dist/api/structure/post-save-structure.handler
     description: POST /save/structure
     events:
       - http:
@@ -643,7 +668,7 @@ functions:
                 }
                 }
   save-dev-structure:
-    handler: api/structure/post-dev-structure.handler
+    handler: dist/api/structure/post-dev-structure.handler
     description: POST /dev/structure
     events:
       - http:
@@ -694,6 +719,7 @@ functions:
           request:
             template:
               application/json: >
+
   authorization-lambda:
     handler: api/auth/auth.handler
     integration: lambda
@@ -731,7 +757,7 @@ functions:
                 }
                 }
   get-business:
-    handler: api/business/get-name-of-business.handler
+    handler: dist/api/business/get-name-of-business.handler
     description: GET /business
     events:
       - http:
