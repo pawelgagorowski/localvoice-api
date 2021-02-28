@@ -1,10 +1,12 @@
 'use strict';
 
 import AWS                                       from "aws-sdk";
-import { decodeString, getQueryParams }          from "../../utils/helperFunctions";
-import { getSavedLessonRequestType, 
+import { decodeString, getQueryParams, 
+        getHeaders }                             from "../../utils/helperFunctions";
+import { paramsFromRequest, 
         LessonType, 
-        getSavedLessonQueryParams }              from "../../models/types";
+        getSavedLessonQueryParams, BusinessHeaderType, ResponseType }              from "../../models/types";
+import { HeadersAndParamsRequestInterface }      from "../../models/interfaces";
 import CustomError                               from "../../classes/errorResponse";
 import Response                                  from "../../classes/response";
 import DynamoDB                                  from "../../classes/dynamoDB";
@@ -13,7 +15,7 @@ import logger                                    from "../../config/logger";
 AWS.config.update({ region: 'eu-central-1' });
 const docClient: AWS.DynamoDB.DocumentClient = new AWS.DynamoDB.DocumentClient();
 
-const handler = async (event: getSavedLessonRequestType) => {
+const handler = async (event: HeadersAndParamsRequestInterface<BusinessHeaderType, paramsFromRequest>) => {
   const generalErrorMessage = "there was an error while getting lesson";
 
   try {
@@ -21,10 +23,13 @@ const handler = async (event: getSavedLessonRequestType) => {
     
     const noItemErrorMessage = 'sorry but we could\'nt find that lesson in database';
     const missingParamsErrorMessage = 'there are some missing params while getting lesson';
+    const missingBusinessHeaderErrorMessage = "there was business header missing in request";
     const successResponseMessage = "lesson was successfully retrieved";
-    const { business: encodedBusiness, key: encodedKey } = getQueryParams<getSavedLessonQueryParams>(event.queryParams, missingParamsErrorMessage, "business", "key");
-    
-    const business = decodeString(encodedBusiness);
+    const noLessonResponse = "there is no such lesson in database";
+
+    const { key: encodedKey } = getQueryParams<getSavedLessonQueryParams>(event.queryParams, missingParamsErrorMessage, "key");
+    const { ['x-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessage, "x-business");
+    console.log(business)
     const key = decodeString(encodedKey);
     
     const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
@@ -36,7 +41,9 @@ const handler = async (event: getSavedLessonRequestType) => {
     }
 
     const lesson = await DynamoDB.getItem<LessonType>(params, noItemErrorMessage);
-    const response = Response.createResponseMessage(successResponseMessage, lesson);
+    let response = {} as ResponseType;
+    if(!lesson) response = Response.createResponseMessage(noLessonResponse, {});
+    else response = Response.createResponseMessage(successResponseMessage, lesson);
     logger("info", response, "response");
     return response;
   } catch(error) {

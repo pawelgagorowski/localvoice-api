@@ -3,7 +3,7 @@
 import AWS                                       from "aws-sdk";
 import { LessonType }                            from "../../models/types";
 import LessonValidation                          from "../../utils/validateLesson";
-import { BodyAndHeaderRequestInterface }                from "../../models/interfaces";
+import { BodyAndHeaderRequestInterface }         from "../../models/interfaces";
 import CustomError                               from "../../classes/errorResponse";
 import DynamoDB                                  from "../../classes/dynamoDB";
 import Response                                  from "../../classes/response";
@@ -20,6 +20,14 @@ const handler = async (event: BodyAndHeaderRequestInterface<LessonType, Headers>
     const updateItemErrorMessage = "there was an error while updating lesson in database";
     const queryItemsErrorMessage = "there was an error with quering challenges while adding lesson to testing environment";
     const putChallengesErrorMessage = "there was an error with adding challenges to database while adding lesson to testing environment";
+
+    const arrayOfComments = LessonValidation.validateLesson(event.body)
+
+    if(arrayOfComments.length > 0 ) {
+      const comments = arrayOfComments.join(',');
+      const response = Response.createResponseMessage(comments, {});
+      return response;
+    }
 
     const updateParams = Params.createParamsToUpdateTestingLessons(event.body);
     const updatedLesson = await DynamoDB.updateItem(updateParams, updateItemErrorMessage);

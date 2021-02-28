@@ -1,7 +1,7 @@
 'use strict';
 
 import AWS                                              from "aws-sdk";
-import { StructureToTestBodyRequest, 
+import { StructureToTestBodyRequest,
         BusinessHeaderType }                            from "../../models/types";
 import { BodyAndHeaderRequestInterface }                from "../../models/interfaces";
 import { getBodyProperty, getHeaders }                  from "../../utils/helperFunctions";
@@ -20,9 +20,9 @@ const handler = async (event: BodyAndHeaderRequestInterface<StructureToTestBodyR
   try {
     const missingBodyPropertyErrorMessage = "there are some missing body property request";
     const missingBusinessHeaderErrorMessage = "there was business header missing while deleting little picture"
-    const successResponseMessage = "Structure was successfully saved";
+    const successResponseMessage = "structure was successfully send to testing environment";
     const { courses, categories, lessons, env } = getBodyProperty<StructureToTestBodyRequest>(event.body, missingBodyPropertyErrorMessage, "courses", "lessons", "categories", "env");
-    const { ['X-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessage, "X-business"); 
+    const { ['x-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessage, "x-business");
 
     const structure = new ValidateStructure(env);
     const commentsForCourses = structure.validateCourses(courses);

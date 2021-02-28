@@ -49,7 +49,7 @@ const buildParamsForECS = ({ business, course, category, lesson, version }: ECSP
             },
             {
               name: 'VERSION',
-              value: version
+              value: version.toString()
             }
           ]
         }

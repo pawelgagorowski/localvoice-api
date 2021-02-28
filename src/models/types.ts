@@ -35,8 +35,8 @@ export type requestEventType = {
     queryParams: any,
     pathParams: string,
     isOffline?: boolean,
-    stageVariables: {} 
-} 
+    stageVariables: {}
+}
 
 export type getSavedLessonRequestType = {
     method: string,
@@ -45,13 +45,13 @@ export type getSavedLessonRequestType = {
     queryParams: getSavedLessonQueryParams,
     pathParams: string,
     isOffline?: boolean,
-    stageVariables: {} 
+    stageVariables: {}
 }
 
 export type getListOfLessonsRequestType = {
     tester: string,
     ifOffline?: boolean,
-    stageVariables: {} 
+    stageVariables: {}
 }
 
 export type getSavedLessonQueryParams = {
@@ -65,7 +65,7 @@ export type listOfLessonsArrayType =  listOfLessonsType []
 export type listOfLessonsType = {
     course?: string,
     category?: string,
-    lesson?: string    
+    lesson?: string
 }
 
 export type CustomErrorMessageType = {
@@ -76,6 +76,7 @@ export type ResponseType = {
     statusCode: number,
     answer: string,
     body?: string
+    headers?: any
 }
 
 export type GeneralHeadersType = {
@@ -90,11 +91,11 @@ export type GeneralHeadersType = {
 }
 
 export type UserHeaderType = {
-    "X-user": string
+    "x-user": string
 }
 
 export type BusinessHeaderType = {
-    "X-business": string
+    "x-business": string
 }
 
 export type HeadersType = {
@@ -219,7 +220,7 @@ export type StructureToTestBodyRequest = {
 
 export type FinaleCommentsType = {
     answer: string[]
-} 
+}
 
 
 

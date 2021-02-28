@@ -22,7 +22,7 @@ const handler = async (event: BodyAndHeaderRequestInterface<LessonType, HeadersT
     const postErrorMessage = "there was an error with adding new lessons to database while saving lesson";
     const SuccessResponseMessage = "lesson was successfully saved";
     const noUserErrorMessage = "there is no user in header while saving lesson";
-    const { ['X-user']: user } = getHeaders<UserHeaderType>(event.headers, noUserErrorMessage, "X-user");
+    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, noUserErrorMessage, "x-user");
 
     const params: AWS.DynamoDB.DocumentClient.PutItemInput = {
       TableName: process.env.LESSONS_FOR_TESTING,

@@ -4,7 +4,6 @@ plugins:
   - serverless-offline
   - serverless-domain-manager
   - serverless-export-env
-
 custom:
   allowedHeaders:
     - X-business
@@ -42,6 +41,7 @@ provider:
     CATEGORIES_TABLE: !ImportValue ListOfCategoriesTable-${opt:stage, self:provider.stage}
     LIST_OF_LESSONS_FOR_SPECIFIC_CATEGORY_TABLE: !ImportValue ListOfLessonsTable-${opt:stage, self:provider.stage}
     STRUCTURE_TABLE: !ImportValue StructureTable-${opt:stage, self:provider.stage}
+    SECRET_KEY: ${file(./variables.json):SECRET_KEY}
     LESSONS_FOR_TESTING: ${file(./variables.json):LESSONS_FOR_TESTING}
     DIALOGFLOW_PROJECT_ID: ${file(./variables.json):DIALOGFLOW_PROJECT_ID}
     AWS_S3_BUCKET_PICTURES: ${file(./variables.json):AWS_S3_BUCKET_PICTURES}
@@ -110,7 +110,7 @@ functions:
                 }
                 }
   generate-pictures:
-    handler: src/api/pictures/generate-pictures.handler
+    handler: dist/api/pictures/generate-pictures.handler
     description: POST /generatePictures
     events:
       - http:
@@ -208,6 +208,7 @@ functions:
                   #end
                 }
                 }
+                
   get-words:
     handler: src/api/words/get-words.handler
     description: GET /words
@@ -272,8 +273,7 @@ functions:
                 }
                 }
   delete-saved-lesson:
-    # in use
-    handler: src/api/lesson/delete-lesson.handler
+    handler: dist/api/lesson/delete-lesson.handler
     description: DELETE /lesson
     events:
       - http:
@@ -306,7 +306,6 @@ functions:
                 }
                 }
   get-saved-lessons:
-    # in use
     handler: dist/api/lessons/get-lessons.handler
     description: GET /lessons/{name}
     events:
@@ -325,7 +324,6 @@ functions:
                 "tester": "$input.params('name')"
                 }
   save-lesson-for-further-processing:
-    # in use
     handler: dist/api/lesson/post-saved-lesson.handler
     description: POST /save
     events:
@@ -424,112 +422,17 @@ functions:
                   #end
                 }
                 }
-  post-save-course:
-    handler: api/post-save-course.handler
-    description: POST /course/save
+  get-structure:
+    handler: dist/api/structure/get-structure.handler
+    description: GET /structure
     events:
       - http:
-          path: course/save
-          method: post
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
-                {
-                "method": "$context.httpMethod",
-                "body" : $input.json('$'),
-                "headers": {
-                  #foreach($param in $input.params().header.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "queryParams": {
-                  #foreach($param in $input.params().querystring.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "pathParams": {
-                  #foreach($param in $input.params().path.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-                  #end
-                }
-                }
-  get-saved-courses:
-    handler: api/get-saved-courses.handler
-    description: GET /course/saved
-    events:
-      - http:
-          path: course/saved
+          path: structure
           method: get
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
-                {
-                "method": "$context.httpMethod",
-                "body" : $input.json('$'),
-                "headers": {
-                  #foreach($param in $input.params().header.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "queryParams": {
-                  #foreach($param in $input.params().querystring.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "pathParams": {
-                  #foreach($param in $input.params().path.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-                  #end
-                }
-                }
-  get-saved-categories:
-    handler: api/get-saved-categories.handler
-    description: GET /category/saved
-    events:
-      - http:
-          path: category/saved
-          method: get
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
-                {
-                "method": "$context.httpMethod",
-                "body" : $input.json('$'),
-                "headers": {
-                  #foreach($param in $input.params().header.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "queryParams": {
-                  #foreach($param in $input.params().querystring.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "pathParams": {
-                  #foreach($param in $input.params().path.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-                  #end
-                }
-                }
-  post-save-categories:
-    handler: api/post-save-category.handler
-    description: POST /category/save
-    events:
-      - http:
-          path: category/save
-          method: post
+          authorizer:
+            name: authorization-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           integration: lambda
           cors:
             origin: '*'
@@ -558,82 +461,9 @@ functions:
                 }
           response:
             headers:
-              Content-Type: "'application/json'"
-            statusCodes:
-              200:
-                pattern: ''
-              400:
-                pattern: '^Missing.*'
-                template: ${file(resources/error-response-template.yml)}
-              500:
-                pattern: '^(?!Missing).*'
-                template: ${file(resources/500-response-template.yml)}
-  # get-saved-lessons:
-  #   handler: api/get-saved-lessons.handler
-  #   description: GET /lesson/saved
-  #   events:
-  #     - http:
-  #         path: lesson/saved
-  #         method: get
-  #         integration: lambda
-  #         cors:
-  #           origin: '*'
-  #           headers: ${self:custom.allowedHeaders}
-  #         request:
-  #           template:
-  #             application/json: >
-  #               {
-  #               "method": "$context.httpMethod",
-  #               "body" : $input.json('$'),
-  #               "headers": {
-  #                 #foreach($param in $input.params().header.keySet())
-  #                 "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-  #                 #end
-  #               },
-  #               "queryParams": {
-  #                 #foreach($param in $input.params().querystring.keySet())
-  #                 "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-  #                 #end
-  #               },
-  #               "pathParams": {
-  #                 #foreach($param in $input.params().path.keySet())
-  #                 "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-  #                 #end
-  #               }
-  #               }
-  get-structure:
-    handler: dist/api/structure/get-structure.handler
-    description: GET /structure
-    events:
-      - http:
-          path: structure
-          method: get
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
-                {
-                "method": "$context.httpMethod",
-                "body" : $input.json('$'),
-                "headers": {
-                  #foreach($param in $input.params().header.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "queryParams": {
-                  #foreach($param in $input.params().querystring.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "pathParams": {
-                  #foreach($param in $input.params().path.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-                  #end
-                }
-                }
+              Access-Control-Allow-Origin: "'*'"
+              # Access-Control-Allow-Credentials: true
+
   save-structure:
     handler: dist/api/structure/post-save-structure.handler
     description: POST /save/structure
@@ -704,7 +534,7 @@ functions:
                 }
                 }
   registration-for-testers:
-    handler: api/registration/post-registration.handler
+    handler: src/api/registration/post-registration.handler
     description: POST /registration
     events:
       - http:
@@ -720,9 +550,17 @@ functions:
             template:
               application/json: >
 
+
   authorization-lambda:
-    handler: api/auth/auth.handler
+    handler: src/api/auth/auth.handler
     integration: lambda
+    cors:
+      origin: '*'
+      headers: ${self:custom.allowedHeaders}
+    # response:
+    #   headers:
+    #     Access-Control-Allow-Origin: "'*'"
+
   action-to-read-function:
     handler: api/extraFeatures/action-to-readFunction.handler
     description: GET /read
@@ -756,6 +594,7 @@ functions:
                   #end
                 }
                 }
+
   get-business:
     handler: dist/api/business/get-name-of-business.handler
     description: GET /business
@@ -764,6 +603,10 @@ functions:
           path: business
           method: get
           integration: lambda
+          authorizer:
+            name: authorization-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -803,6 +646,8 @@ functions:
           request:
             template:
               application/json: >
+
+
 # resources:
 #   Resources:
 #     GatewayResponseDefault4XX:
@@ -814,89 +659,3 @@ functions:
 #         ResponseType: DEFAULT_4XX
 #         RestApiId:
 #           Ref: 'ApiGatewayRestApi'
-#     LessonsTable:
-#       Type: AWS::DynamoDB::Table
-#       DeletionPolicy: Retain
-#       Properties:
-#         TableName: ${self:provider.environment.LESSONS_TABLE}
-#         AttributeDefinitions:
-#           - AttributeName: category
-#             AttributeType: S
-#           - AttributeName: name
-#             AttributeType: S
-#           - AttributeName: tester
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: category
-#             KeyType: HASH
-#           - AttributeName: name
-#             KeyType: RANGE
-#         ProvisionedThroughput:
-#           ReadCapacityUnits: 1
-#           WriteCapacityUnits: 1
-#         GlobalSecondaryIndexes:
-#           - IndexName: tester-index
-#             KeySchema:
-#               - AttributeName: tester
-#                 KeyType: HASH
-#             Projection:
-#               ProjectionType: ALL
-#             ProvisionedThroughput:
-#               ReadCapacityUnits: 1
-#               WriteCapacityUnits: 1
-#     WordTable:
-#       Type: AWS::DynamoDB::Table
-#       DeletionPolicy: Retain
-#       Properties:
-#         TableName: ${self:provider.environment.WORDS_TABLE}
-#         AttributeDefinitions:
-#           - AttributeName: word
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: word
-#             KeyType: HASH
-#         ProvisionedThroughput:
-#           ReadCapacityUnits: 1
-#           WriteCapacityUnits: 1
-#     RegistrationTable:
-#       Type: AWS::DynamoDB::Table
-#       DeletionPolicy: Retain
-#       Properties:
-#         TableName: ${self:provider.environment.USERS_TABLE}
-#         AttributeDefinitions:
-#           - AttributeName: email
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: email
-#             KeyType: HASH
-#         BillingMode: PAY_PER_REQUEST
-    # LessonsTable:
-    #   Type: AWS::DynamoDB::Table
-    #   DeletionPolicy: Retain
-    #   Properties:
-    #     TableName: ${self:provider.environment.LESSONS_TABLE}
-    #     AttributeDefinitions:
-    #       - AttributeName: category
-    #         AttributeType: S
-    #       - AttributeName: name
-    #         AttributeType: S
-    #       - AttributeName: tester
-    #         AttributeType: S
-    #     KeySchema:
-    #       - AttributeName: category
-    #         KeyType: HASH
-    #       - AttributeName: name
-    #         KeyType: RANGE
-    #     ProvisionedThroughput:
-    #       ReadCapacityUnits: 1
-    #       WriteCapacityUnits: 1
-    #     GlobalSecondaryIndexes:
-    #       - IndexName: tester-index
-    #         KeySchema:
-    #           - AttributeName: tester
-    #             KeyType: HASH
-    #         Projection:
-    #           ProjectionType: ALL
-    #         ProvisionedThroughput:
-    #           ReadCapacityUnits: 1
-    #           WriteCapacityUnits: 1

@@ -23,7 +23,7 @@ const handler = async (event: HeadersAndParamsRequestInterface<BusinessHeaderTyp
     const successResponseMessage = "credential was successfully retrieved";
 
     const { type, target } = getQueryParams<GetImageCredentialsRequestParamsType>(event.queryParams, missingParamsErrorMessage, "type", "target");
-    const { ['X-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessasge, "X-business");
+    const { ['x-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessasge, "x-business");
 
     const randomString = getRandomFilename();
 

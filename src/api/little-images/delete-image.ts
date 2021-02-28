@@ -16,12 +16,12 @@ const handler = async (event: HeadersAndParamsRequestInterface<BusinessHeaderTyp
   
   try {
     const missingParamsErrorMessage = "there are some params missing while deleting little picture";
-    const missingBusinessHeaderErrorMessage = "there was business header missing while deleting little picture"
+    const missingBusinessHeaderErrorMessage = "there was business header missing while deleting little picture";
     const deleteObjectErrorMessage = "there was an error while deleting little picture from database";
     const successResponseMessage = "picture was successfully deleted";
 
     const { filename: fileName, target } = getQueryParams<DeleteLittleImageRequestParamsType>(event.queryParams, missingParamsErrorMessage, "filename", "target"); 
-    const { ['X-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessage, "X-business"); 
+    const { ['x-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessage, "x-business"); 
     const key = `${target}/${business}/${fileName}`;
 
     const params: AWS.S3.DeleteObjectRequest = {

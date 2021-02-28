@@ -21,7 +21,7 @@ const handler = async (event: BodyAndHeaderRequestInterface<StructureRequestBody
     const dataBaseErrorMessage = "there was an error trying to save structure in database";
     const successResponse = "structure was successfully saved";
 
-    const { ["X-business"]: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeader, "X-business");
+    const { ["x-business"]: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeader, "x-business");
     const { structure } = getBodyProperty<StructureRequestBody>(event.body, noDataToSave, "structure");
 
     const params: AWS.DynamoDB.DocumentClient.PutItemInput = {

@@ -17,7 +17,7 @@ const handler = async (event: HeaderRequestInterface<UserHeaderType>) => {
     const noUserInHeaderErrorMessage = "there is no user in header while getting name of business";
     const successResponseMessage = "business name was successfully retrieved";
     const noBusinessFound = "there was no business coresponding with the user. Contact to admin";
-    const { ['X-user']: user } = getHeaders<UserHeaderType>(event.headers, noUserInHeaderErrorMessage, "X-user");
+    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, noUserInHeaderErrorMessage, "x-user");
 
     const params: AWS.DynamoDB.DocumentClient.GetItemInput = {
       TableName: process.env.BUSINESS_TABLE,
@@ -29,7 +29,7 @@ const handler = async (event: HeaderRequestInterface<UserHeaderType>) => {
     logger("info", business, "name of business");
     let response = {} as ResponseType;
     if(!business) response = Response.createResponseMessage(noBusinessFound, {});
-    else response = Response.createResponseMessage(successResponseMessage, { business: business});
+    else response = Response.createResponseMessage(successResponseMessage, business);
     return response;
 
   } catch(error) {
