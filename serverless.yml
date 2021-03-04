@@ -313,6 +313,10 @@ functions:
           path: lessons/{name}
           method: get
           integration: lambda
+          authorizer:
+            name: authorization-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
