@@ -1,4 +1,5 @@
 import AWS                                      from "aws-sdk";
+import Params from "../classes/params";
 
 export type LessonType = {
     business: string,
@@ -126,8 +127,15 @@ export type GetImageCredentialsResponse = {
     fullPath: string
 }
 
-export type PostImageVersioning = {
-    business: string,
+export type KeyHeaderType = {
+    key: string
+}
+
+export type KeyBodyType = {
+    key: string
+}
+
+export type KeyParamsType = {
     key: string
 }
 
@@ -220,6 +228,11 @@ export type StructureToTestBodyRequest = {
 
 export type FinaleCommentsType = {
     answer: string[]
+}
+
+export type BusinessTableType = {
+    email: string,
+    business: string
 }
 
 

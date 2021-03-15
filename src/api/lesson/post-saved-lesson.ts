@@ -5,8 +5,9 @@ import { LessonType, HeadersType,
          UserHeaderType }                        from "../../models/types";
 import LessonValidation                          from "../../utils/validateLesson";
 import { getHeaders }                            from "../../utils/helperFunctions";
-import { BodyAndHeaderRequestInterface }                from "../../models/interfaces";
+import { BodyAndHeaderRequestInterface }         from "../../models/interfaces";
 import CustomError                               from "../../classes/errorResponse";
+import getNameOfBusiness                         from "../../utils/getNameOfBusiness";
 import DynamoDB                                  from "../../classes/dynamoDB";
 import Response                                  from "../../classes/response";
 import logger                                    from "../../config/logger";        
@@ -23,13 +24,14 @@ const handler = async (event: BodyAndHeaderRequestInterface<LessonType, HeadersT
     const SuccessResponseMessage = "lesson was successfully saved";
     const noUserErrorMessage = "there is no user in header while saving lesson";
     const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, noUserErrorMessage, "x-user");
+    const business = await getNameOfBusiness(user);
 
     const params: AWS.DynamoDB.DocumentClient.PutItemInput = {
       TableName: process.env.LESSONS_FOR_TESTING,
       Item: {
         tester: user,
         course: event.body.course,
-        business: event.body.business,
+        business: business,
         category: event.body.category,
         translatedCategory: event.body.translatedCategory,
         lesson: event.body.lesson,

@@ -143,3 +143,26 @@
 
 
 
+// get-saved-lessons:
+//     handler: dist/api/lessons/get-lessons.handler
+//     description: GET /lessons
+//     events:
+//       - http:
+//           path: lessons/{name}
+//           method: get
+//           integration: lambda
+//           authorizer:
+//             name: authorization-lambda
+//             identitySource: method.request.header.Authorization
+//             resultTtlInSeconds: 3600
+//           cors:
+//             origin: '*'
+//             headers: ${self:custom.allowedHeaders}
+//           request:
+//             template:
+//               application/json: >
+//                 #set($inputRoot = $input.path('$'))
+//                 {
+//                 "tester": "$input.params('name')"
+//                 }
+

@@ -307,10 +307,10 @@ functions:
                 }
   get-saved-lessons:
     handler: dist/api/lessons/get-lessons.handler
-    description: GET /lessons/{name}
+    description: GET /lessons
     events:
       - http:
-          path: lessons/{name}
+          path: lessons
           method: get
           integration: lambda
           authorizer:
@@ -323,9 +323,24 @@ functions:
           request:
             template:
               application/json: >
-                #set($inputRoot = $input.path('$'))
                 {
-                "tester": "$input.params('name')"
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
                 }
   save-lesson-for-further-processing:
     handler: dist/api/lesson/post-saved-lesson.handler
@@ -663,3 +678,28 @@ functions:
 #         ResponseType: DEFAULT_4XX
 #         RestApiId:
 #           Ref: 'ApiGatewayRestApi'
+
+
+
+# get-saved-lessons:
+#     handler: dist/api/lessons/get-lessons.handler
+#     description: GET /lessons
+#     events:
+#       - http:
+#           path: lessons/{name}
+#           method: get
+#           integration: lambda
+#           authorizer:
+#             name: authorization-lambda
+#             identitySource: method.request.header.Authorization
+#             resultTtlInSeconds: 3600
+#           cors:
+#             origin: '*'
+#             headers: ${self:custom.allowedHeaders}
+#           request:
+#             template:
+#               application/json: >
+#                 #set($inputRoot = $input.path('$'))
+#                 {
+#                 "tester": "$input.params('name')"
+#                 }

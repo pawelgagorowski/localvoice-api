@@ -21,13 +21,13 @@ export default class DynamoDB {
         return listOfItems;
     }
 
-    static async getItem<T>(params: AWS.DynamoDB.DocumentClient.GetItemInput, noItemErrorMessage: string): Promise<T | string> {
+    static async getItem<T>(params: AWS.DynamoDB.DocumentClient.GetItemInput, noItemErrorMessage: string): Promise<T | null> {
         const data: AWS.DynamoDB.DocumentClient.GetItemOutput | AWS.AWSError = await docClient.get(params).promise();
         logger("info", data, "DynamoDB getItem");
 
         if(isAWSErrorMessage<AWS.DynamoDB.DocumentClient.GetItemOutput>(data)) throw CustomError.createCustomErrorMessage(noItemErrorMessage);
         if(!data.Item) {
-            return "";
+            return null;
         }
         return data.Item as T;
     }

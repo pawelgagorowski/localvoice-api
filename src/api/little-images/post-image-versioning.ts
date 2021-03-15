@@ -1,23 +1,27 @@
 'use strict';
 
 import AWS                                       from "aws-sdk";
-import { PostImageVersioning, 
-          versionOfTestType }                    from "../../models/types";
-import { BodyRequestParams }                     from "../../models/interfaces";
-import { getBodyProperty }                       from "../../utils/helperFunctions";
+import { UserHeaderType, KeyBodyType, 
+        versionOfTestType }                      from "../../models/types";
+import { BodyAndHeaderRequestInterface }         from "../../models/interfaces";
+import { getBodyProperty, getHeaders }           from "../../utils/helperFunctions";
 import CustomError                               from "../../classes/errorResponse";
+import getNameOfBusiness                         from "../../utils/getNameOfBusiness";
 import Response                                  from "../../classes/response";
 import logger                                    from "../../config/logger";
 import DynamoDB                                  from "../../classes/dynamoDB";
 
-const handler = async (event: BodyRequestParams<PostImageVersioning>) => {
+const handler = async (event: BodyAndHeaderRequestInterface<UserHeaderType, KeyBodyType>) => {
   const generalErrorMessage = "there was an error while updating image version"; 
   try {
-    const missingBodyPropertyErrorMessage = "there was some missing body properties while update version of image";
+    const missingBodyPropertyErrorMessage = "there was some missing body properties while updating version of image";
+    const missingUserHeaderErrorMessasge = "there is no user header while updating version of image";
     const updateErrorMessage = "there was an error with updating version of image while post image versioning";
     const successResponse = "version of image was successfully retrieved";
 
-    const { business, key } = getBodyProperty<PostImageVersioning>(event.body, missingBodyPropertyErrorMessage, "business", "key");
+    const { key } = getBodyProperty<KeyBodyType>(event.body, missingBodyPropertyErrorMessage, "key");
+    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, missingUserHeaderErrorMessasge, "x-user");
+    const business = await getNameOfBusiness(user);
     const version = 'versionOfTest';
 
     const params: AWS.DynamoDB.DocumentClient.UpdateItemInput = {

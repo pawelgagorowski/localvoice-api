@@ -5,8 +5,10 @@ import { decodeString, getQueryParams,
         getHeaders }                             from "../../utils/helperFunctions";
 import { paramsFromRequest, 
         LessonType, 
-        getSavedLessonQueryParams, BusinessHeaderType, ResponseType }              from "../../models/types";
+        getSavedLessonQueryParams, 
+        UserHeaderType, ResponseType }           from "../../models/types";
 import { HeadersAndParamsRequestInterface }      from "../../models/interfaces";
+import getNameOfBusiness                         from "../../utils/getNameOfBusiness";
 import CustomError                               from "../../classes/errorResponse";
 import Response                                  from "../../classes/response";
 import DynamoDB                                  from "../../classes/dynamoDB";
@@ -15,7 +17,7 @@ import logger                                    from "../../config/logger";
 AWS.config.update({ region: 'eu-central-1' });
 const docClient: AWS.DynamoDB.DocumentClient = new AWS.DynamoDB.DocumentClient();
 
-const handler = async (event: HeadersAndParamsRequestInterface<BusinessHeaderType, paramsFromRequest>) => {
+const handler = async (event: HeadersAndParamsRequestInterface<UserHeaderType, paramsFromRequest>) => {
   const generalErrorMessage = "there was an error while getting lesson";
 
   try {
@@ -23,13 +25,13 @@ const handler = async (event: HeadersAndParamsRequestInterface<BusinessHeaderTyp
     
     const noItemErrorMessage = 'sorry but we could\'nt find that lesson in database';
     const missingParamsErrorMessage = 'there are some missing params while getting lesson';
-    const missingBusinessHeaderErrorMessage = "there was business header missing in request";
+    const missingUserHeaderErrorMessage = "there was business header missing in request";
     const successResponseMessage = "lesson was successfully retrieved";
     const noLessonResponse = "there is no such lesson in database";
 
     const { key: encodedKey } = getQueryParams<getSavedLessonQueryParams>(event.queryParams, missingParamsErrorMessage, "key");
-    const { ['x-business']: business } = getHeaders<BusinessHeaderType>(event.headers, missingBusinessHeaderErrorMessage, "x-business");
-    console.log(business)
+    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, missingUserHeaderErrorMessage, "x-user");
+    const business = await getNameOfBusiness(user);
     const key = decodeString(encodedKey);
     
     const params: AWS.DynamoDB.DocumentClient.GetItemInput = {

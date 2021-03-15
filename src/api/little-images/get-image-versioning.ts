@@ -12,6 +12,7 @@ import logger                                    from "../../config/logger";
 
 const handler = async (event: ParamsRequestInterface<GetImageVersioningparamsType>) => {
   logger("info", event, "event");
+  
   const missingParamsErrorMessage = "there are some missing params while get image versioning";
   const getCounterErrorMessage = "there was an error with getting counter while get image versioning";
   const successResponse = "version of image was successfully retrieved";

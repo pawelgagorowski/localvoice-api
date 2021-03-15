@@ -1,9 +1,8 @@
-import { requestEventType, 
-        ResponseType }                              from "./types";
+import { requestEventType }                              from "./types";
 
 export interface BodyAndHeaderRequestInterface<T, K> extends requestEventType {
-    body: T
     headers: K
+    body: T
 }
 
 export interface HeaderRequestInterface<T> extends requestEventType {
