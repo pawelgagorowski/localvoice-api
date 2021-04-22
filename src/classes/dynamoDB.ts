@@ -17,7 +17,7 @@ export default class DynamoDB {
         if (data.LastEvaluatedKey) {
             params.ExclusiveStartKey = data.LastEvaluatedKey;
             return await DynamoDB.queryItems(params, listOfItems, errorMessage);
-        } 
+        }
         return listOfItems;
     }
 

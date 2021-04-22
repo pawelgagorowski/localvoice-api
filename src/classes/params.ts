@@ -2,7 +2,7 @@ import { LessonType }                                        from "../models/typ
 
 export default class Params {
 
-    static createParamsToUpdateTestingLessons(body: LessonType): AWS.DynamoDB.DocumentClient.UpdateItemInput {
+    static createParamsToUpdateTestingLessons(body: LessonType, business: string): AWS.DynamoDB.DocumentClient.UpdateItemInput {
         const params: AWS.DynamoDB.DocumentClient.UpdateItemInput = {
             TableName: process.env.LIST_OF_ALL_LESSONS_TABLE,
             ReturnValues:"UPDATED_NEW",
@@ -26,21 +26,21 @@ export default class Params {
             },
             UpdateExpression: "set #course = :course, #lesson = :lesson, #translatedLesson = :translatedLesson, #category = :category, #translatedCategory = :translatedCategory,  #todaysLesson = :todaysLesson, #categoryKey = :categoryKey",
             Key: {
-              "business": body.business,
+              "business": business,
               "key": body.key
             }
         }
         return params;
     }
 
-    static createParamsToQueryAllChallenges(body: LessonType): AWS.DynamoDB.DocumentClient.QueryInput {
+    static createParamsToQueryAllChallenges(body: LessonType, business: string): AWS.DynamoDB.DocumentClient.QueryInput {
         const queryParams: AWS.DynamoDB.DocumentClient.QueryInput = {
             TableName: process.env.LIST_OF_ALL_LESSONS_TABLE,
             IndexName: "category-index",
             KeyConditionExpression: "#categoryKey = :categoryKey AND #business = :business",
             ExpressionAttributeValues: {
             ":categoryKey": `${body.course}_${body.category}`,
-            ":business": body.business
+            ":business": business
           },
            ExpressionAttributeNames: {
              "#categoryKey": "categoryKey",
@@ -50,15 +50,43 @@ export default class Params {
         return queryParams;
     }
 
-    static createParamsToPutChallenges(challenges: string[], body: LessonType): AWS.DynamoDB.DocumentClient.PutItemInput {
+    static createParamsToPutChallenges(challenges: string[], body: LessonType, business: string): AWS.DynamoDB.DocumentClient.PutItemInput {
         const putParams: AWS.DynamoDB.DocumentClient.PutItemInput = {
             TableName: process.env.MONTHLY_CHALLENGE_TABLE,
             Item: {
-              business: body.business,
+              business: business,
               category: body.category,
               montlyChallenge: challenges
             }
         }
         return putParams;
     }
+
+    static createParamsToQueryBusinessByEmail(email: string): AWS.DynamoDB.DocumentClient.QueryInput {
+      const queryParams: AWS.DynamoDB.DocumentClient.QueryInput = {
+          TableName: process.env.BUSINESS_TABLE,
+          KeyConditionExpression: "#email = :email",
+          ExpressionAttributeValues: {
+          ":email": email
+        },
+         ExpressionAttributeNames: {
+           "#email": "email"
+         }
+      }
+      return queryParams;
+  }
+
+  static createParamsToQueryUsersByEmail(email: string): AWS.DynamoDB.DocumentClient.QueryInput {
+    const queryParams: AWS.DynamoDB.DocumentClient.QueryInput = {
+        TableName: process.env.USERS_TABLE,
+        KeyConditionExpression: "#email = :email",
+        ExpressionAttributeValues: {
+        ":email": email
+      },
+       ExpressionAttributeNames: {
+         "#email": "email"
+       }
+    }
+    return queryParams;
+}
 } 

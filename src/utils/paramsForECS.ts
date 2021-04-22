@@ -24,7 +24,7 @@ const buildParamsForECS = ({ business, course, category, lesson, version }: ECSP
           name: process.env.CONTAINER_NAME,
           environment: [
             {
-              name: 'AWS_S3_BUCKET',
+              name: 'AWS_S3_BUCKET_PICTURES',
               value: process.env.AWS_S3_BUCKET_PICTURES
             },
             {

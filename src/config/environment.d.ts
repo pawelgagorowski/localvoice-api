@@ -18,7 +18,9 @@ declare global {
         CATEGORIES_TABLE: string,
         LIST_OF_LESSONS_FOR_SPECIFIC_CATEGORY_TABLE: string,
         COURSES_TABLE: string,
-        COURSES_IN_BUSINESS_TABLE: string
+        COURSES_IN_BUSINESS_TABLE: string,
+        USERS_TABLE: string,
+        AUTH0_CLIENT_SECRET: string
       }
     }
   }

@@ -4,9 +4,8 @@ import AWS                                       from "aws-sdk";
 import { UserHeaderType, KeyBodyType, 
         versionOfTestType }                      from "../../models/types";
 import { BodyAndHeaderRequestInterface }         from "../../models/interfaces";
-import { getBodyProperty, getHeaders }           from "../../utils/helperFunctions";
+import { getBodyProperty }                       from "../../utils/helperFunctions";
 import CustomError                               from "../../classes/errorResponse";
-import getNameOfBusiness                         from "../../utils/getNameOfBusiness";
 import Response                                  from "../../classes/response";
 import logger                                    from "../../config/logger";
 import DynamoDB                                  from "../../classes/dynamoDB";
@@ -15,13 +14,10 @@ const handler = async (event: BodyAndHeaderRequestInterface<UserHeaderType, KeyB
   const generalErrorMessage = "there was an error while updating image version"; 
   try {
     const missingBodyPropertyErrorMessage = "there was some missing body properties while updating version of image";
-    const missingUserHeaderErrorMessasge = "there is no user header while updating version of image";
     const updateErrorMessage = "there was an error with updating version of image while post image versioning";
     const successResponse = "version of image was successfully retrieved";
 
     const { key } = getBodyProperty<KeyBodyType>(event.body, missingBodyPropertyErrorMessage, "key");
-    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, missingUserHeaderErrorMessasge, "x-user");
-    const business = await getNameOfBusiness(user);
     const version = 'versionOfTest';
 
     const params: AWS.DynamoDB.DocumentClient.UpdateItemInput = {
@@ -36,7 +32,7 @@ const handler = async (event: BodyAndHeaderRequestInterface<UserHeaderType, KeyB
       },
       UpdateExpression: "set #c = if_not_exists(#c, :init) + :inc",
       Key: {
-        business: business,
+        business: event.business,
         key: key
       }
     }

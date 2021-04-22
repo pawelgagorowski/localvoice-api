@@ -1,7 +1,7 @@
 'use strict';
 
 import AWS                                       from "aws-sdk";
-import { LessonType }                            from "../../models/types";
+import { LessonType, UserHeaderType }            from "../../models/types";
 import LessonValidation                          from "../../utils/validateLesson";
 import { BodyAndHeaderRequestInterface }         from "../../models/interfaces";
 import CustomError                               from "../../classes/errorResponse";
@@ -13,7 +13,7 @@ import logger                                    from "../../config/logger";
 AWS.config.update({ region: 'eu-central-1' });
 const docClient: AWS.DynamoDB.DocumentClient = new AWS.DynamoDB.DocumentClient();
 
-const handler = async (event: BodyAndHeaderRequestInterface<LessonType, Headers>) => {
+const handler = async (event: BodyAndHeaderRequestInterface<LessonType, UserHeaderType>) => {
   const generalErrorMessage = "there was an error while adding lesson to the database before testing";
   try {
     const successMessageResponse = "lesson was successfully added to tesing environment";
@@ -29,16 +29,16 @@ const handler = async (event: BodyAndHeaderRequestInterface<LessonType, Headers>
       return response;
     }
 
-    const updateParams = Params.createParamsToUpdateTestingLessons(event.body);
+    const updateParams = Params.createParamsToUpdateTestingLessons(event.body, event.business);
     const updatedLesson = await DynamoDB.updateItem(updateParams, updateItemErrorMessage);
     logger("info", updatedLesson, "updated lesson");
 
-    const queryParams = Params.createParamsToQueryAllChallenges(event.body);
+    const queryParams = Params.createParamsToQueryAllChallenges(event.body, event.business);
     const lessonsWithChallenges = await DynamoDB.queryItems<LessonType>(queryParams, [], queryItemsErrorMessage);
     const allChallenges = retrievingQuestionsFromLessons(lessonsWithChallenges);
     logger("info", allChallenges, "allChallenges");
     
-    const putParams = Params.createParamsToPutChallenges(allChallenges, event.body);
+    const putParams = Params.createParamsToPutChallenges(allChallenges, event.body, event.business);
     await DynamoDB.putItem(putParams, putChallengesErrorMessage);
     
     const response = Response.createResponseMessage(successMessageResponse, {});

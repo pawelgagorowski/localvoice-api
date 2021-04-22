@@ -31,6 +31,8 @@ export type paramsFromRequest = {
 
 export type requestEventType = {
     method: string,
+    business: string,
+    email: string,
     body: {},
     headers: {},
     queryParams: any,
@@ -233,6 +235,44 @@ export type FinaleCommentsType = {
 export type BusinessTableType = {
     email: string,
     business: string
+}
+
+export type JsonWebToken = {
+    header: {
+        alg: string,
+        typ: string  
+    }
+    payload: {
+        sub: string,
+        name?: string,
+        email?: string,
+        iat: string 
+    }
+}
+
+export type UsersTable = {
+    _id: string,
+    business: string,
+    email: string,
+    picture: string
+}
+
+export type BusinessTable = {
+    business: string,
+    email: string,
+    _id: string
+}
+
+export type AuthContext = {
+    business: string,
+    email: string,
+    picture?: string
+}
+
+export type UserInfo = {
+    business: string,
+    userId: string,
+    picture?: string
 }
 
 

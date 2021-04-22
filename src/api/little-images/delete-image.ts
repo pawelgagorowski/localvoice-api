@@ -4,8 +4,7 @@ import AWS                                      from "aws-sdk";
 import { DeleteLittleImageRequestParamsType, 
          UserHeaderType }                       from "../../models/types";
 import { HeadersAndParamsRequestInterface }     from "../../models/interfaces";
-import { getQueryParams, getHeaders }           from "../../utils/helperFunctions";
-import getNameOfBusiness                        from "../../utils/getNameOfBusiness";
+import { getQueryParams }                       from "../../utils/helperFunctions";
 import S3Client                                 from "../../classes/s3";
 import CustomError                              from "../../classes/errorResponse";
 import Response                                 from "../../classes/response";
@@ -17,20 +16,18 @@ const handler = async (event: HeadersAndParamsRequestInterface<UserHeaderType, D
   
   try {
     const missingParamsErrorMessage = "there are some params missing while deleting little picture";
-    const missingUserHeaderErrorMessage = "there was business header missing while deleting little picture";
     const deleteObjectErrorMessage = "there was an error while deleting little picture from database";
     const successResponseMessage = "picture was successfully deleted";
 
-    const { filename: fileName, target } = getQueryParams<DeleteLittleImageRequestParamsType>(event.queryParams, missingParamsErrorMessage, "filename", "target"); 
-    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, missingUserHeaderErrorMessage, "x-user"); 
-    const business = await getNameOfBusiness(user);
-    const key = `${target}/${business}/${fileName}`;
+    const { filename: fileName, target } = getQueryParams<DeleteLittleImageRequestParamsType>(event.queryParams, missingParamsErrorMessage, "filename", "target");
+    const key = `${event.business}/${target}/${fileName}`;
+    logger('info', key, 'key');
 
     const params: AWS.S3.DeleteObjectRequest = {
       Bucket: process.env.AWS_S3_BUCKET_PICTURES,
       Key: key
     }
-    await S3Client.deleteObject(params, deleteObjectErrorMessage);
+    const result = await S3Client.deleteObject(params, deleteObjectErrorMessage);
     const response = Response.createResponseMessage(successResponseMessage);
     logger("info", response, "response");
     return response;

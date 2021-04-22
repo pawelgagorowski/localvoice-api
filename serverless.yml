@@ -1,4 +1,4 @@
-service: ga-web-english-project
+service: localvoice-api
 
 plugins:
   - serverless-offline
@@ -14,8 +14,7 @@ custom:
     - Authorization
   customDomain:
     domainName: api.localvoice.pl
-    basePath: 'v2'
-    stage: ${opt:stage, self:provider.stage}
+    basePath: ${opt:stage, self:provider.stage}
     certificateName: localvoice.pl
     createRoute53Record: true
 
@@ -23,7 +22,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   region: eu-central-1
-  stage: test
+  stage: dev
   memorySize: 128
   timeout: 5
   endpointType: regional
@@ -37,6 +36,7 @@ provider:
     LESSONS_TABLE: ga-web-english-project--lessons_for_testing-prod
     MONTHLY_CHALLENGE_TABLE: !ImportValue MonthlyChallengeTable-${opt:stage, self:provider.stage}
     INIT_VERSION: 0
+    WINNERS_TABLE: !ImportValue WinnersTable-${opt:stage, self:provider.stage}
     COURSES_TABLE: !ImportValue CoursesTable-${opt:stage, self:provider.stage}
     CATEGORIES_TABLE: !ImportValue ListOfCategoriesTable-${opt:stage, self:provider.stage}
     LIST_OF_LESSONS_FOR_SPECIFIC_CATEGORY_TABLE: !ImportValue ListOfLessonsTable-${opt:stage, self:provider.stage}
@@ -50,6 +50,8 @@ provider:
     ECS_TASK_VPC_SUBNET_1: ${file(./variables.json):ECS_TASK_VPC_SUBNET_1}
     ECS_TASK_VPC_SUBNET_2: ${file(./variables.json):ECS_TASK_VPC_SUBNET_2}
     CONTAINER_NAME: ${file(./variables.json):CONTAINER_NAME}
+    AUTH0_CLIENT_SECRET: ${file(./variables.json):AUTH0_CLIENT_SECRET}
+    LOCALVOICE_PHRASE_TABLE: !ImportValue LocalvoiceTables-${opt:stage, self:provider.stage}
 
 
   iamRoleStatements:
@@ -75,6 +77,19 @@ provider:
         - !ImportValue ListOfCategoriesTableArn-${opt:stage, self:provider.stage}
         - !ImportValue CoursesInBusinessTableArn-${opt:stage, self:provider.stage}
         - !ImportValue MonthlyChallengeTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue WinnersTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForMayTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForJuneTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForJulyTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForAugustTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForSeptemberTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForOctoberTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForNovemberTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForDecemberTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForJanuaryTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForFebruaryTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForMarchTableArn-${opt:stage, self:provider.stage}
+        - !ImportValue ResultsForAprilTableArn-${opt:stage, self:provider.stage}
 functions:
   test-lesson:
     handler: dist/api/lesson/post-test-lesson.handler
@@ -83,6 +98,90 @@ functions:
       - http:
           path: test
           method: post
+          integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
+  get-results:
+    handler: src/api/winners/getResults.handler
+    description: GET /results
+    events:
+      - http:
+          path: results
+          method: get
+          authorizer:
+            name: authorization-user-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
+          integration: lambda
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+          request:
+            template:
+              application/json: >
+                {
+                "email": "$context.authorizer.email",
+                "picture": "$context.authorizer.picture",
+                "business": "$context.authorizer.business",
+                "method": "$context.httpMethod",
+                "body" : $input.json('$'),
+                "headers": {
+                  #foreach($param in $input.params().header.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "queryParams": {
+                  #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+                  #end
+                },
+                "pathParams": {
+                  #foreach($param in $input.params().path.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+                  #end
+                }
+                }
+  put-winners:
+    handler: src/api/winners/putWinners.handler
+    description: PUT /winner list
+    events:
+      - schedule:
+          rate: cron(59 18 * * ? *)
+          enabled: true
+          input:
+            env: test
+      - http:
+          path: results
+          method: put
           integration: lambda
           cors:
             origin: '*'
@@ -117,6 +216,10 @@ functions:
           path: generatePictures
           method: post
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -124,6 +227,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -143,13 +248,17 @@ functions:
                 }
                 }
   image-credentials:
-    handler: dist/api/little-images/get-image-credentials.handler
+    handler: dist/api/little-images/get-s3-credentials.handler
     description: GET /imageCredentials
     events:
       - http:
           path: imageCredentials
           method: get
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -157,6 +266,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -183,6 +294,10 @@ functions:
           path: image
           method: delete
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -190,6 +305,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -247,6 +364,10 @@ functions:
           path: lesson
           method: get
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -254,6 +375,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -280,6 +403,10 @@ functions:
           path: lesson
           method: delete
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -287,6 +414,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -314,16 +443,20 @@ functions:
           method: get
           integration: lambda
           authorizer:
-            name: authorization-lambda
+            name: authorization-business-lambda
             identitySource: method.request.header.Authorization
             resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
           request:
+            headers:
+              users: "'hello'"
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -350,6 +483,10 @@ functions:
           path: save
           method: post
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -357,6 +494,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -383,6 +522,10 @@ functions:
           path: image
           method: post
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -390,6 +533,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -416,6 +561,10 @@ functions:
           path: image
           method: get
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -423,6 +572,8 @@ functions:
             template:
               application/json: >
                 {
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "method": "$context.httpMethod",
                 "body" : $input.json('$'),
                 "headers": {
@@ -449,7 +600,7 @@ functions:
           path: structure
           method: get
           authorizer:
-            name: authorization-lambda
+            name: authorization-business-lambda
             identitySource: method.request.header.Authorization
             resultTtlInSeconds: 3600
           integration: lambda
@@ -461,6 +612,8 @@ functions:
               application/json: >
                 {
                 "method": "$context.httpMethod",
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "body" : $input.json('$'),
                 "headers": {
                   #foreach($param in $input.params().header.keySet())
@@ -491,6 +644,10 @@ functions:
           path: save/structure
           method: post
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -499,6 +656,8 @@ functions:
               application/json: >
                 {
                 "method": "$context.httpMethod",
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "body" : $input.json('$'),
                 "headers": {
                   #foreach($param in $input.params().header.keySet())
@@ -524,17 +683,20 @@ functions:
           path: dev/structure
           method: post
           integration: lambda
+          authorizer:
+            name: authorization-business-lambda
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
           request:
-            schema:
-              application/json: ${file(./create_request.json)}
-              text/html: { foo: 'bar' }
             template:
               application/json: >
                 {
                 "method": "$context.httpMethod",
+                "email": "$context.authorizer.email",
+                "business": "$context.authorizer.business",
                 "body" : $input.json('$'),
                 "headers": {
                   #foreach($param in $input.params().header.keySet())
@@ -560,7 +722,7 @@ functions:
           path: registration
           method: post
           authorizer:
-            name: authorization-lambda
+            name: authorization-business-lambda
             identitySource: method.request.header.Authorization
             resultTtlInSeconds: 3600
           integration: lambda
@@ -570,101 +732,103 @@ functions:
               application/json: >
 
 
-  authorization-lambda:
-    handler: src/api/auth/auth.handler
-    integration: lambda
+  authorization-business-lambda:
+    handler: dist/api/auth/businessAuth.handler
     cors:
       origin: '*'
       headers: ${self:custom.allowedHeaders}
-    # response:
-    #   headers:
-    #     Access-Control-Allow-Origin: "'*'"
+  
+  authorization-user-lambda:
+    handler: dist/api/auth/userAuth.handler
+    cors:
+      origin: '*'
+      headers: ${self:custom.allowedHeaders}
 
-  action-to-read-function:
-    handler: api/extraFeatures/action-to-readFunction.handler
-    description: GET /read
-    events:
-      - http:
-          path: read
-          method: post
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
-                {
-                "method": "$context.httpMethod",
-                "body" : $input.json('$'),
-                "headers": {
-                  #foreach($param in $input.params().header.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "queryParams": {
-                  #foreach($param in $input.params().querystring.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "pathParams": {
-                  #foreach($param in $input.params().path.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-                  #end
-                }
-                }
+  # action-to-read-function:
+  #   handler: api/extraFeatures/action-to-readFunction.handler
+  #   description: GET /read
+  #   events:
+  #     - http:
+  #         path: read
+  #         method: post
+  #         integration: lambda
+  #         cors:
+  #           origin: '*'
+  #           headers: ${self:custom.allowedHeaders}
+  #         request:
+  #           template:
+  #             application/json: >
+  #               {
+  #               "method": "$context.httpMethod",
+  #               "body" : $input.json('$'),
+  #               "headers": {
+  #                 #foreach($param in $input.params().header.keySet())
+  #                 "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+  #                 #end
+  #               },
+  #               "queryParams": {
+  #                 #foreach($param in $input.params().querystring.keySet())
+  #                 "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+  #                 #end
+  #               },
+  #               "pathParams": {
+  #                 #foreach($param in $input.params().path.keySet())
+  #                 "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+  #                 #end
+  #               }
+  #               }
 
-  get-business:
-    handler: dist/api/business/get-name-of-business.handler
-    description: GET /business
-    events:
-      - http:
-          path: business
-          method: get
-          integration: lambda
-          authorizer:
-            name: authorization-lambda
-            identitySource: method.request.header.Authorization
-            resultTtlInSeconds: 3600
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
-                {
-                "method": "$context.httpMethod",
-                "body" : $input.json('$'),
-                "headers": {
-                  #foreach($param in $input.params().header.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "queryParams": {
-                  #foreach($param in $input.params().querystring.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
-                  #end
-                },
-                "pathParams": {
-                  #foreach($param in $input.params().path.keySet())
-                  "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
-                  #end
-                }
-                }
-  put-text-to-readFunction:
-    handler: api/extraFeatures/put-text-to-readFunction.handler
-    description: PUT /text
-    events:
-      - http:
-          path: text
-          method: put
-          integration: lambda
-          cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}
-          request:
-            template:
-              application/json: >
+  # get-business:
+  #   handler: dist/api/business/get-name-of-business.handler
+  #   description: GET /business
+  #   events:
+  #     - http:
+  #         path: business
+  #         method: get
+  #         integration: lambda
+  #         authorizer:
+  #           name: authorization-business-lambda
+  #           identitySource: method.request.header.Authorization
+  #           resultTtlInSeconds: 3600
+  #         cors:
+  #           origin: '*'
+  #           headers: ${self:custom.allowedHeaders}
+  #         request:
+  #           template:
+  #             application/json: >
+  #               {
+  #               "method": "$context.httpMethod",
+  #               "body" : $input.json('$'),
+  #               "headers": {
+  #                 #foreach($param in $input.params().header.keySet())
+  #                 "$param": "$util.escapeJavaScript($input.params().header.get($param))" #if($foreach.hasNext),#end
+  #                 #end
+  #               },
+  #               "queryParams": {
+  #                 #foreach($param in $input.params().querystring.keySet())
+  #                 "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+  #                 #end
+  #               },
+  #               "pathParams": {
+  #                 #foreach($param in $input.params().path.keySet())
+  #                 "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+  #                 #end
+  #               }
+  #               }
+  # put-text-to-readFunction:
+  #   handler: api/extraFeatures/put-text-to-readFunction.handler
+  #   description: PUT /text
+  #   events:
+  #     - http:
+  #         path: text
+  #         method: put
+  #         integration: lambda
+  #         cors:
+  #           origin: '*'
+  #           headers: ${self:custom.allowedHeaders}
+  #         request:
+  #           template:
+  #             application/json: >
 
 
 # resources:
@@ -690,7 +854,7 @@ functions:
 #           method: get
 #           integration: lambda
 #           authorizer:
-#             name: authorization-lambda
+#             name: authorization-business-lambda
 #             identitySource: method.request.header.Authorization
 #             resultTtlInSeconds: 3600
 #           cors:

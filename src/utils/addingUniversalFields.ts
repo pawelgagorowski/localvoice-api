@@ -34,6 +34,20 @@ class UniversalFields {
     })
   }
 
+  addIntelligentReplaysButton(lessons: ListOfLessonsStructureType) {
+    const intelligentReplays = {
+      title: "Intelligent Replays",
+      description: "Powtórz frazy które sprawiały Ci problemy!",
+      image: "https://d24xp1bilplfor.cloudfront.net/icons/inteligent-replays.png",
+      alt: "intelligent replay image"
+    }
+    lessons.forEach((course) => {
+      course.forEach((category) => {
+        category.list.push(intelligentReplays);
+      })
+    })
+  }
+
   addChallengeButtons(lessons: ListOfLessonsStructureType) {
     let challengeObject;
     let myArray: ItemStructure[] = []
@@ -54,6 +68,8 @@ class UniversalFields {
       })
     })
   }
+
+
 
   addSignInButton(category: CourseInStructureType[]) {
     const signInItem = {

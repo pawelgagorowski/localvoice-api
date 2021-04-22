@@ -2,7 +2,6 @@
 
 import AWS                                      from "aws-sdk";
 import { listOfLessonsArrayType }               from "../../models/types";
-import { getHeaders }                           from "../../utils/helperFunctions";
 import { HeaderRequestInterface }               from "../../models/interfaces";
 import { UserHeaderType }                       from "../../models/types";
 import CustomError                              from "../../classes/errorResponse";
@@ -16,16 +15,13 @@ const handler = async (event: HeaderRequestInterface<UserHeaderType>) => {
   let listOfLessons: listOfLessonsArrayType[] = [];
   const generalErrorMessage = "there was an error with adding lesson to database while getting lessons";
   const successResponseMessage = "list of lessons was successfully retrieved";
-  const missingUserHeaderErrorMessage = "there was user header missing while deleting lesson";
   try {
-    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, missingUserHeaderErrorMessage, "x-user"); 
-
     const params: AWS.DynamoDB.DocumentClient.QueryInput = {
       TableName: process.env.LESSONS_FOR_TESTING,
       IndexName: "tester-index",
       KeyConditionExpression: "#tester = :tester",
       ExpressionAttributeValues: {
-        ":tester": user
+        ":tester": event.email
       },
       ExpressionAttributeNames: {
         "#tester": "tester",

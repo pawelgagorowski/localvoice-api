@@ -13,6 +13,7 @@
     "serverless-reqvalidator-plugin": "^1.0.3"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.1",
     "serverless": "^2.18.0",
     "serverless-export-env": "^1.4.0",
     "ts-node": "^9.1.1",

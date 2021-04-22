@@ -4,11 +4,10 @@ import AWS                                              from "aws-sdk";
 import { StructureToTestBodyRequest,
         UserHeaderType }                                from "../../models/types";
 import { BodyAndHeaderRequestInterface }                from "../../models/interfaces";
-import { getBodyProperty, getHeaders }                  from "../../utils/helperFunctions";
+import { getBodyProperty }                              from "../../utils/helperFunctions";
 import { RemoveOldStructure, PutNewStructure }          from '../../utils/addingStructure';
 import { ValidateStructure }                            from '../../utils/validateStructure';
 import { UniversalFields }                              from '../../utils/addingUniversalFields';
-import getNameOfBusiness                                from "../../utils/getNameOfBusiness";
 import CustomError                                      from "../../classes/errorResponse";
 import Response                                         from "../../classes/response";
 import logger                                           from "../../config/logger";
@@ -20,11 +19,8 @@ const handler = async (event: BodyAndHeaderRequestInterface<StructureToTestBodyR
   const generalErrorMessage = "there was an error while saving structure";
   try {
     const missingBodyPropertyErrorMessage = "there are some missing body property request";
-    const missingUserHeaderErrorMessage = "there was user header missing while deleting little picture"
     const successResponseMessage = "structure was successfully send to testing environment";
     const { courses, categories, lessons, env } = getBodyProperty<StructureToTestBodyRequest>(event.body, missingBodyPropertyErrorMessage, "courses", "lessons", "categories", "env");
-    const { ['x-user']: user } = getHeaders<UserHeaderType>(event.headers, missingUserHeaderErrorMessage, "x-user");
-    const business = await getNameOfBusiness(user);
 
     const structure = new ValidateStructure(env);
     const commentsForCourses = structure.validateCourses(courses);
@@ -43,13 +39,14 @@ const handler = async (event: BodyAndHeaderRequestInterface<StructureToTestBodyR
     universalFields.addSignInButton(categories);
     universalFields.addChallengeButtons(lessons);
     universalFields.addGoBackToCategoryButton(lessons);
+    universalFields.addIntelligentReplaysButton(lessons);
     universalFields.addMonthlyChallengeButton(lessons);
 
-    const removeRecords = new RemoveOldStructure(business, env);
+    const removeRecords = new RemoveOldStructure(event.business, env);
     await removeRecords.removeLessons();
     await removeRecords.removeCategories();
 
-    const newStructure = new PutNewStructure(business, env);
+    const newStructure = new PutNewStructure(event.business, env);
     await newStructure.addCourse(courses);
     await newStructure.addCategories(categories);
     await newStructure.addLessons(lessons);
