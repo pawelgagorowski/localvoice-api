@@ -1,4 +1,5 @@
 variables.json
+.env
 
 # package directories
 node_modules
