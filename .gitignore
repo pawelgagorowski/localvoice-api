@@ -1,5 +1,9 @@
 variables.json
+variables.prod.json
+variables.test.json
+publish.sh
 .env
+event.json
 
 # package directories
 node_modules
